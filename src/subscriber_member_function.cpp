@@ -14,6 +14,7 @@
 
 #include <functional>
 #include <memory>
+#include <chrono>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -27,18 +28,25 @@ public:
   MinimalSubscriber()
   : Node("minimal_subscriber")
   {
+    publisher_ = this->create_publisher<std_msgs::msg::Header>("uptopic", 10);
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
-      "topic", 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
+      "downtopic", 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
+
+    RCLCPP_INFO(this->get_logger(), "subnode starts 0829 ver");
   }
 
 private:
-  void topic_callback(const std_msgs::msg::Header & msg) const
+  void topic_callback(const std_msgs::msg::Header & msg) 
   {
     std::string content = msg.frame_id;
-    RCLCPP_INFO(this->get_logger(), "I heard: '%s' / %d.%d - %f", content.substr(content.size() - 6).c_str(),
-                                                               msg.stamp.sec, msg.stamp.nanosec/1000,
-                                                               this->now().seconds());
+    auto message = std_msgs::msg::Header();
+    message.frame_id = std::to_string(msg.stamp.sec)+"."+std::to_string(msg.stamp.nanosec/1000) + " - "
+                        +std::to_string(this->now().seconds()) + content.substr(content.size() - 963);
+    message.stamp = this->get_clock()->now();
+
+    publisher_->publish(message);
   }
+  rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr publisher_;
   rclcpp::Subscription<std_msgs::msg::Header>::SharedPtr subscription_;
 };
 
