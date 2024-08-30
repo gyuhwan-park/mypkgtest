@@ -61,11 +61,12 @@ private:
   {
     auto message = std_msgs::msg::Header();
     // message.data = "Time : " + std::to_string(this->now().seconds()) + "000" + std::to_string(count_++);
-    message.frame_id = std::string(pkg_size, '0') + std::to_string(count_++);
+    message.frame_id = std::string(pkg_size, '0') + std::to_string(count_);
     message.stamp = this->get_clock()->now();
 
     // RCLCPP_INFO(this->get_logger(), ">>>>'%s'", message.data.c_str());
     publisher_->publish(message);
+    count_++;
   }
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr publisher_;
