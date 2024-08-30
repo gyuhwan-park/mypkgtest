@@ -21,6 +21,18 @@
 #include "std_msgs/msg/header.hpp"
 
 using std::placeholders::_1;
+static const rmw_qos_profile_t my_qos_profile =
+{
+    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
+};
 
 class MinimalSubscriber : public rclcpp::Node
 {
@@ -28,9 +40,10 @@ public:
   MinimalSubscriber()
   : Node("minimal_subscriber")
   {
-    publisher_ = this->create_publisher<std_msgs::msg::Header>("uptopic", 10);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile.history, 10), my_qos_profile);
+    publisher_ = this->create_publisher<std_msgs::msg::Header>("uptopic", qos);
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
-      "downtopic", 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
+      "downtopic", qos, std::bind(&MinimalSubscriber::topic_callback, this, _1));
 
     RCLCPP_INFO(this->get_logger(), "subnode starts 0829 ver");
   }
@@ -40,9 +53,8 @@ private:
   {
     std::string content = msg.frame_id;
     auto message = std_msgs::msg::Header();
-    message.frame_id = std::to_string(msg.stamp.sec)+"."+std::to_string(msg.stamp.nanosec/1000) + " - "
-                        +std::to_string(this->now().seconds()) + content.substr(content.size() - 963);
-    message.stamp = this->get_clock()->now();
+    message.frame_id = content;
+    message.stamp = msg.stamp;
 
     publisher_->publish(message);
   }
