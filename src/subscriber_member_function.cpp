@@ -24,8 +24,8 @@ using std::placeholders::_1;
 static const rmw_qos_profile_t my_qos_profile =
 {
     RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
-    10,
-    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    100,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
     RMW_QOS_DEADLINE_DEFAULT,
     RMW_QOS_LIFESPAN_DEFAULT,
@@ -40,7 +40,7 @@ public:
   MinimalSubscriber()
   : Node("minimal_subscriber")
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile.history, 10), my_qos_profile);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile.history, 100), my_qos_profile);
     publisher_ = this->create_publisher<std_msgs::msg::Header>("uptopic", qos);
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
       "downtopic", qos, std::bind(&MinimalSubscriber::topic_callback, this, _1));

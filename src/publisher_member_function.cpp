@@ -27,8 +27,8 @@ using std::placeholders::_1;
 static const rmw_qos_profile_t my_qos_profile =
 {
     RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
-    10,
-    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    100,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
     RMW_QOS_DEADLINE_DEFAULT,
     RMW_QOS_LIFESPAN_DEFAULT,
@@ -48,10 +48,10 @@ public:
   MinimalPublisher(int msg_size)
   : Node("minimal_publisher"), count_(0), pkg_size(msg_size)
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile.history, 10), my_qos_profile);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile.history, 100), my_qos_profile);
     publisher_ = this->create_publisher<std_msgs::msg::Header>("downtopic", qos);
     timer_ = this->create_wall_timer(
-      1ns, std::bind(&MinimalPublisher::timer_callback, this));
+      100ns, std::bind(&MinimalPublisher::timer_callback, this));
     
     RCLCPP_INFO(this->get_logger(), "pubnode starts 0829 ver");
   }
