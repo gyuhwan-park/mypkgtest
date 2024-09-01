@@ -24,11 +24,47 @@
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
-static const rmw_qos_profile_t my_qos_profile =
+static const rmw_qos_profile_t my_qos_profile0 =
+{
+    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
+};
+static const rmw_qos_profile_t my_qos_profile1 =
+{
+    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
+};
+static const rmw_qos_profile_t my_qos_profile2 =
 {
     RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
     100,
     RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
+};
+static const rmw_qos_profile_t my_qos_profile3 =
+{
+    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+    100,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
     RMW_QOS_DEADLINE_DEFAULT,
     RMW_QOS_LIFESPAN_DEFAULT,
@@ -45,13 +81,25 @@ static const rmw_qos_profile_t my_qos_profile =
 class MinimalPublisher : public rclcpp::Node
 {
 public:
-  MinimalPublisher(int msg_size)
+  MinimalPublisher(int msg_size, int rule, int time_rule)
   : Node("minimal_publisher"), count_(0), pkg_size(msg_size)
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile.history, 100), my_qos_profile);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile0.history, 10), my_qos_profile0);
+    if (rule == 1)
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile1.history, 10), my_qos_profile1);
+    else if (rule == 2)
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile2.history, 100), my_qos_profile2);
+    else
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile3.history, 100), my_qos_profile3);
+
     publisher_ = this->create_publisher<std_msgs::msg::Header>("downtopic", qos);
-    timer_ = this->create_wall_timer(
-      100ns, std::bind(&MinimalPublisher::timer_callback, this));
+    
+    if (time_rule == 0)
+      timer_ = this->create_wall_timer(10ns, std::bind(&MinimalPublisher::timer_callback, this));
+    else if (time_rule == 1)
+      timer_ = this->create_wall_timer(100ns, std::bind(&MinimalPublisher::timer_callback, this));
+    else
+      timer_ = this->create_wall_timer(1000ns, std::bind(&MinimalPublisher::timer_callback, this));
     
     RCLCPP_INFO(this->get_logger(), "pubnode starts 0829 ver");
   }
@@ -77,10 +125,16 @@ private:
 class ResponseReader : public rclcpp::Node
 {
 public:
-  ResponseReader()
+  ResponseReader(int rule)
   : Node("ResponseReader")
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile.history, 10), my_qos_profile);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile0.history, 10), my_qos_profile0);
+    if (rule == 1)
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile1.history, 10), my_qos_profile1);
+    else if (rule == 2)
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile2.history, 100), my_qos_profile2);
+    else
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile3.history, 100), my_qos_profile3);
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
       "uptopic", qos, std::bind(&ResponseReader::topic_callback, this, _1));
   }
@@ -102,11 +156,13 @@ int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
   int msg_size = atoi(argv[1]);
+  int rule = atoi(argv[2]);
+  int time_rule = atoi(argv[3]);
 
   // You MUST use the MultiThreadedExecutor to use, well, multiple threads
   rclcpp::executors::MultiThreadedExecutor executor;
-  auto pubnode = std::make_shared<MinimalPublisher>(msg_size);
-  auto subnode = std::make_shared<ResponseReader>();
+  auto pubnode = std::make_shared<MinimalPublisher>(msg_size, rule, time_rule);
+  auto subnode = std::make_shared<ResponseReader>(rule);
 
   executor.add_node(pubnode);
   executor.add_node(subnode);

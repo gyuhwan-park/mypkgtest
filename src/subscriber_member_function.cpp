@@ -21,7 +21,31 @@
 #include "std_msgs/msg/header.hpp"
 
 using std::placeholders::_1;
-static const rmw_qos_profile_t my_qos_profile =
+static const rmw_qos_profile_t my_qos_profile0 =
+{
+    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
+};
+static const rmw_qos_profile_t my_qos_profile1 =
+{
+    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
+};
+static const rmw_qos_profile_t my_qos_profile2 =
 {
     RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
     100,
@@ -33,14 +57,33 @@ static const rmw_qos_profile_t my_qos_profile =
     RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
     false
 };
+static const rmw_qos_profile_t my_qos_profile3 =
+{
+    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+    100,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
+};
 
 class MinimalSubscriber : public rclcpp::Node
 {
 public:
-  MinimalSubscriber()
+  MinimalSubscriber(int rule)
   : Node("minimal_subscriber")
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile.history, 100), my_qos_profile);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile0.history, 10), my_qos_profile0);
+    if (rule == 1)
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile1.history, 10), my_qos_profile1);
+    else if (rule == 2)
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile2.history, 100), my_qos_profile2);
+    else
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile3.history, 100), my_qos_profile3);
+
     publisher_ = this->create_publisher<std_msgs::msg::Header>("uptopic", qos);
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
       "downtopic", qos, std::bind(&MinimalSubscriber::topic_callback, this, _1));
@@ -65,7 +108,9 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<MinimalSubscriber>());
+  int rule = atoi(argv[1]);
+
+  rclcpp::spin(std::make_shared<MinimalSubscriber>(rule));
   rclcpp::shutdown();
   return 0;
 }
