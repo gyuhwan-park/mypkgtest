@@ -100,6 +100,8 @@ private:
     message.stamp = msg.stamp;
 
     publisher_->publish(message);
+
+    RCLCPP_INFO(this->get_logger(), "NUM%s ", content.substr(content.size() - 6).c_str());
   }
   rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr publisher_;
   rclcpp::Subscription<std_msgs::msg::Header>::SharedPtr subscription_;
