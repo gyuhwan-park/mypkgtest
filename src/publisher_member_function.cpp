@@ -27,7 +27,7 @@ using std::placeholders::_1;
 static const rmw_qos_profile_t my_qos_profile0 =
 {
     RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
-    10,
+    5,
     RMW_QOS_POLICY_RELIABILITY_RELIABLE,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
     RMW_QOS_DEADLINE_DEFAULT,
@@ -39,7 +39,7 @@ static const rmw_qos_profile_t my_qos_profile0 =
 static const rmw_qos_profile_t my_qos_profile1 =
 {
     RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
-    10,
+    5,
     RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
     RMW_QOS_DEADLINE_DEFAULT,
@@ -89,17 +89,17 @@ public:
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile1.history, 10), my_qos_profile1);
     else if (rule == 2)
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile2.history, 100), my_qos_profile2);
-    else
+    else if (rule == 3)
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile3.history, 100), my_qos_profile3);
 
     publisher_ = this->create_publisher<std_msgs::msg::Header>("downtopic", qos);
     
     if (time_rule == 0)
-      timer_ = this->create_wall_timer(10ns, std::bind(&MinimalPublisher::timer_callback, this));
+      timer_ = this->create_wall_timer(10us, std::bind(&MinimalPublisher::timer_callback, this));
     else if (time_rule == 1)
-      timer_ = this->create_wall_timer(100ns, std::bind(&MinimalPublisher::timer_callback, this));
+      timer_ = this->create_wall_timer(1ms, std::bind(&MinimalPublisher::timer_callback, this));
     else
-      timer_ = this->create_wall_timer(1000ns, std::bind(&MinimalPublisher::timer_callback, this));
+      timer_ = this->create_wall_timer(10ms, std::bind(&MinimalPublisher::timer_callback, this));
     
     RCLCPP_INFO(this->get_logger(), "pubnode starts 0829 ver");
   }
@@ -133,7 +133,7 @@ public:
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile1.history, 10), my_qos_profile1);
     else if (rule == 2)
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile2.history, 100), my_qos_profile2);
-    else
+    else if (rule == 3)
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile3.history, 100), my_qos_profile3);
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
       "uptopic", qos, std::bind(&ResponseReader::topic_callback, this, _1));

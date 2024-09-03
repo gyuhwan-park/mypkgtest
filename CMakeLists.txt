@@ -24,10 +24,13 @@ add_executable(talker src/publisher_member_function.cpp)
 ament_target_dependencies(talker rclcpp std_msgs)
 add_executable(listener src/subscriber_member_function.cpp)
 ament_target_dependencies(listener rclcpp std_msgs)
+add_executable(justlistener src/sub_just_listen.cpp)
+ament_target_dependencies(justlistener rclcpp std_msgs)
 
 install(TARGETS
   talker
   listener
+  justlistener
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
