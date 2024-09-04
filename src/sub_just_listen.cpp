@@ -23,10 +23,10 @@
 #include "std_msgs/msg/header.hpp"
 
 using std::placeholders::_1;
-static const rmw_qos_profile_t my_qos_profile_re =
+static const rmw_qos_profile_t my_qos_profile_keepall =
 {
-    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
-    5,
+    RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+    10,
     RMW_QOS_POLICY_RELIABILITY_RELIABLE,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
     RMW_QOS_DEADLINE_DEFAULT,
@@ -35,10 +35,22 @@ static const rmw_qos_profile_t my_qos_profile_re =
     RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
     false
 };
-static const rmw_qos_profile_t my_qos_profile_be =
+static const rmw_qos_profile_t my_qos_profile_keeplast =
+{
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
+};
+static const rmw_qos_profile_t my_qos_profile_best =
 {
     RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
-    5,
+    10,
     RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
     RMW_QOS_DEADLINE_DEFAULT,
@@ -49,7 +61,7 @@ static const rmw_qos_profile_t my_qos_profile_be =
 };
 static const rmw_qos_profile_t my_qos_profile_queue =
 {
-    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
     100,
     RMW_QOS_POLICY_RELIABILITY_RELIABLE,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
@@ -66,10 +78,12 @@ public:
   MinimalSubscriber(int rule)
   : Node("minimal_subscriber"), count_(0)
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile_re);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_keepall.history, 10), my_qos_profile_keepall);
     if (rule == 1)
-      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_be.history, 5), my_qos_profile_be);
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_keeplast.history, 10), my_qos_profile_keeplast);
     else if (rule == 2)
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_best.history, 10), my_qos_profile_best);
+    else if (rule == 3)
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile_queue);
 
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
@@ -81,7 +95,7 @@ public:
 private:
   void topic_callback(const std_msgs::msg::Header & msg) 
   {
-    if(count_++ % 1000 == 0) {
+    if(count_++ % 10000 == 0) {
       std::string content = msg.frame_id;
       RCLCPP_INFO(this->get_logger(), "NUM %s / %ld ", content.substr(content.size() - 6).c_str(), count_ - 1);
     }

@@ -24,10 +24,10 @@
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
-static const rmw_qos_profile_t my_qos_profile_re =
+static const rmw_qos_profile_t my_qos_profile_keepall =
 {
-    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
-    5,
+    RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+    10,
     RMW_QOS_POLICY_RELIABILITY_RELIABLE,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
     RMW_QOS_DEADLINE_DEFAULT,
@@ -36,10 +36,22 @@ static const rmw_qos_profile_t my_qos_profile_re =
     RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
     false
 };
-static const rmw_qos_profile_t my_qos_profile_be =
+static const rmw_qos_profile_t my_qos_profile_keeplast =
+{
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
+    RMW_QOS_DEADLINE_DEFAULT,
+    RMW_QOS_LIFESPAN_DEFAULT,
+    RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
+    RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
+    false
+};
+static const rmw_qos_profile_t my_qos_profile_best =
 {
     RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
-    5,
+    10,
     RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
     RMW_QOS_DEADLINE_DEFAULT,
@@ -50,7 +62,7 @@ static const rmw_qos_profile_t my_qos_profile_be =
 };
 static const rmw_qos_profile_t my_qos_profile_queue =
 {
-    RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT,
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
     100,
     RMW_QOS_POLICY_RELIABILITY_RELIABLE,
     RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT,
@@ -72,20 +84,22 @@ public:
   MinimalPublisher(int msg_size, int rule, int time_rule)
   : Node("minimal_publisher"), count_(0), pkg_size(msg_size)
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile_re);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_keepall.history, 10), my_qos_profile_keepall);
     if (rule == 1)
-      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_be.history, 5), my_qos_profile_be);
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_keeplast.history, 10), my_qos_profile_keeplast);
     else if (rule == 2)
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_best.history, 10), my_qos_profile_best);
+    else if (rule == 3)
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile_queue);
 
     publisher_ = this->create_publisher<std_msgs::msg::Header>("downtopic", qos);
     
-    if (time_rule == 0)
-      timer_ = this->create_wall_timer(100us, std::bind(&MinimalPublisher::timer_callback, this));
-    else if (time_rule == 1)
-      timer_ = this->create_wall_timer(5ms, std::bind(&MinimalPublisher::timer_callback, this));
-    else
+    if (time_rule == 1)
+      timer_ = this->create_wall_timer(1ms, std::bind(&MinimalPublisher::timer_callback, this));
+    else if (time_rule == 10)
       timer_ = this->create_wall_timer(10ms, std::bind(&MinimalPublisher::timer_callback, this));
+    else if (time_rule == 100)
+      timer_ = this->create_wall_timer(100ms, std::bind(&MinimalPublisher::timer_callback, this));
     
     RCLCPP_INFO(this->get_logger(), "pubnode starts 0829 ver");
   }
@@ -114,9 +128,11 @@ public:
   ResponseReader(int rule)
   : Node("ResponseReader")
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile_re);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_keepall.history, 10), my_qos_profile_keepall);
     if (rule == 1)
-      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_be.history, 5), my_qos_profile_be);
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_keeplast.history, 10), my_qos_profile_keeplast);
+    else if (rule == 2)
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_best.history, 10), my_qos_profile_best);
     else if (rule == 2)
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile_queue);
     
@@ -130,7 +146,7 @@ private:
     std::string content = msg.frame_id;
     std::string countnum = content.substr(content.size() - 6);
 
-    RCLCPP_INFO(this->get_logger(), "NUM%s : %d.%d - %f", countnum.c_str(),
+    RCLCPP_INFO(this->get_logger(), "NUM%s : %d.%06d - %f", countnum.c_str(),
                                                           msg.stamp.sec, msg.stamp.nanosec/1000,
                                                           this->now().seconds());
   }
