@@ -64,7 +64,7 @@ class MinimalSubscriber : public rclcpp::Node
 {
 public:
   MinimalSubscriber(int rule)
-  : Node("minimal_subscriber")
+  : Node("minimal_subscriber"), count_(0)
   {
     auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile_re);
     if (rule == 1)
@@ -81,11 +81,13 @@ public:
 private:
   void topic_callback(const std_msgs::msg::Header & msg) 
   {
-    std::string content = msg.frame_id;
-
-    RCLCPP_INFO(this->get_logger(), "NUM%s ", content.substr(content.size() - 6).c_str());
+    if(count_++ % 1000 == 0) {
+      std::string content = msg.frame_id;
+      RCLCPP_INFO(this->get_logger(), "NUM %s / %ld ", content.substr(content.size() - 6).c_str(), count_ - 1);
+    }
   }
   rclcpp::Subscription<std_msgs::msg::Header>::SharedPtr subscription_;
+  size_t count_;
 };
 
 int main(int argc, char * argv[])
