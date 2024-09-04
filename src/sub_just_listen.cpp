@@ -66,11 +66,11 @@ public:
   MinimalSubscriber(int rule)
   : Node("minimal_subscriber")
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile0);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile_re);
     if (rule == 1)
-      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_be.history, 5), my_qos_profile1);
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_be.history, 5), my_qos_profile_be);
     else if (rule == 2)
-      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile2);
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile_queue);
 
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
       "downtopic", qos, std::bind(&MinimalSubscriber::topic_callback, this, _1));

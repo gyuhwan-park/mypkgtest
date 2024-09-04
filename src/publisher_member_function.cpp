@@ -72,11 +72,11 @@ public:
   MinimalPublisher(int msg_size, int rule, int time_rule)
   : Node("minimal_publisher"), count_(0), pkg_size(msg_size)
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile0);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile_re);
     if (rule == 1)
-      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_be.history, 5), my_qos_profile1);
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_be.history, 5), my_qos_profile_be);
     else if (rule == 2)
-      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile2);
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile_queue);
 
     publisher_ = this->create_publisher<std_msgs::msg::Header>("downtopic", qos);
     
@@ -114,11 +114,11 @@ public:
   ResponseReader(int rule)
   : Node("ResponseReader")
   {
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile0);
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_re.history, 5), my_qos_profile_re);
     if (rule == 1)
-      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_be.history, 5), my_qos_profile1);
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_be.history, 5), my_qos_profile_be);
     else if (rule == 2)
-      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile2);
+      qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile_queue);
     
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
       "uptopic", qos, std::bind(&ResponseReader::topic_callback, this, _1));
