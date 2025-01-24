@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iostream>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -133,7 +134,7 @@ public:
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_keeplast.history, 10), my_qos_profile_keeplast);
     else if (rule == 2)
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_best.history, 10), my_qos_profile_best);
-    else if (rule == 2)
+    else if (rule == 3)
       qos = rclcpp::QoS(rclcpp::QoSInitialization(my_qos_profile_queue.history, 100), my_qos_profile_queue);
     
     subscription_ = this->create_subscription<std_msgs::msg::Header>(
@@ -156,6 +157,9 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
+  if(argc < 4)
+    std::cout << "run \"ros2 run cpp_pubsub talker [msg_size] [rule(0~3)] [time_rule(0~3)]\"" << std::endl;
+
   int msg_size = atoi(argv[1]);
   int rule = atoi(argv[2]);
   int time_rule = atoi(argv[3]);

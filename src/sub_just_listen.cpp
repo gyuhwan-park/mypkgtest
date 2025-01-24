@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iostream>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -107,6 +108,8 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
+  if(argc < 2)
+    std::cout << "RUN \"ros2 run cpp_pubsub justlistener [rule(0~3)]\"" << std::endl;
   int rule = atoi(argv[1]);
 
   rclcpp::executors::MultiThreadedExecutor executor;
