@@ -113,8 +113,13 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  if(argc < 2)
-    std::cout << "RUN \"ros2 run cpp_pubsub listener [rule(0~3)]\"" << std::endl;
+  if(argc < 2) {
+    std::cout << "RUN \"ros2 run cpp_pubsub listener [rule(0/1/2/3)]\"" << std::endl;
+    std::cout << "- rule 0 : keep all" << std::endl;
+    std::cout << "- rule 1 : keep last 10" << std::endl;
+    std::cout << "- rule 2 : best effort" << std::endl;
+    std::cout << "- rule 3 : keep last 100" << std::endl;
+  }
   int rule = atoi(argv[1]);
 
   rclcpp::spin(std::make_shared<MinimalSubscriber>(rule));

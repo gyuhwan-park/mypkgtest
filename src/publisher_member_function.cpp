@@ -157,8 +157,13 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  if(argc < 4)
-    std::cout << "run \"ros2 run cpp_pubsub talker [msg_size] [rule(0~3)] [time_rule(0~3)]\"" << std::endl;
+  if(argc < 4) {
+    std::cout << "RUN \"ros2 run cpp_pubsub talker [msg_size] [rule(0/1/2/3)] [time_rule(1/10/100)]\"" << std::endl;
+    std::cout << "- rule 0 : keep all" << std::endl;
+    std::cout << "- rule 1 : keep last 10" << std::endl;
+    std::cout << "- rule 2 : best effort" << std::endl;
+    std::cout << "- rule 3 : keep last 100" << std::endl;
+  }
 
   int msg_size = atoi(argv[1]);
   int rule = atoi(argv[2]);
